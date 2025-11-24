@@ -1,0 +1,93 @@
+BEGIN:VCALENDAR
+PRODID:-//Microsoft Corporation//Outlook 16.0 MIMEDIR//EN
+VERSION:2.0
+METHOD:REQUEST
+X-MS-OLK-FORCEINSPECTOROPEN:TRUE
+BEGIN:VTIMEZONE
+TZID:Eastern Standard Time
+BEGIN:STANDARD
+DTSTART:16011104T020000
+RRULE:FREQ=YEARLY;BYDAY=1SU;BYMONTH=11
+TZOFFSETFROM:-0400
+TZOFFSETTO:-0500
+END:STANDARD
+BEGIN:DAYLIGHT
+DTSTART:16010311T020000
+RRULE:FREQ=YEARLY;BYDAY=2SU;BYMONTH=3
+TZOFFSETFROM:-0500
+TZOFFSETTO:-0400
+END:DAYLIGHT
+END:VTIMEZONE
+BEGIN:VEVENT
+CLASS:PUBLIC
+CREATED:20251122T054803Z
+DESCRIPTION:Zhuo Chen is inviting you to a scheduled Zoom meeting. \n\nJoin
+	 Zoom Meeting \nhttps://mit.zoom.us/j/99715958775 \n\nOne tap mobile \n+16
+	465588656\,\,99715958775# US (New York) \n+16699006833\,\,99715958775# US 
+	(San Jose) \n\nMeeting ID: 997 1595 8775 \n\nUS : +1 646 558 8656 or +1 66
+	9 900 6833 \n\nInternational Numbers: https://mit.zoom.us/u/auuoeQIVI \n\n
+	Join by SIP \n99715958775@zoomcrc.com <mailto:99715958775@zoomcrc.com>  \n
+	\nJoin by Skype for Business \nhttps://mit.zoom.us/skype/99715958775 \n\n
+DTEND;TZID="Eastern Standard Time":20260112T140000
+DTSTAMP:20251122T054653Z
+DTSTART;TZID="Eastern Standard Time":20260112T130000
+LAST-MODIFIED:20251122T054803Z
+LOCATION:Newton City Hall\; https://mit.zoom.us/j/99715958775
+ORGANIZER;CN="Zhuo Chen":mailto:chenzhuo@mit.edu
+PRIORITY:5
+SEQUENCE:1
+SUMMARY;LANGUAGE=en-us:Zhuo & Claire Wedding
+TRANSP:OPAQUE
+UID:040000008200E00074C5B7101A82E0080000000060413CD9235BDC01000000000000000
+	01000000041A5F18452736E4CAE91C8CDFA94F990
+X-ALT-DESC;FMTTYPE=text/html:<html xmlns:v="urn:schemas-microsoft-com:vml" 
+	xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-mic
+	rosoft-com:office:word" xmlns:m="http://schemas.microsoft.com/office/2004/
+	12/omml" xmlns="http://www.w3.org/TR/REC-html40"><head><meta name=Generato
+	r content="Microsoft Word 15 (filtered medium)"><style><!--\n/* Font Defin
+	itions */\n@font-face\n	{font-family:\\5B8B\\4F53\;\n	panose-1:2 1 6 0 3 1
+	 1 1 1 1\;}\n@font-face\n	{font-family:"Cambria Math"\;\n	panose-1:2 4 5 3
+	 5 4 6 3 2 4\;}\n@font-face\n	{font-family:Aptos\;}\n@font-face\n	{font-fa
+	mily:"\\@\\5B8B\\4F53"\;\n	panose-1:2 1 6 0 3 1 1 1 1 1\;}\n/* Style Defin
+	itions */\na:link\, span.MsoHyperlink\n	{mso-style-priority:99\;\n	color:b
+	lue\;\n	text-decoration:underline\;}\nspan.EmailStyle19\n	{mso-style-type:
+	personal-compose\;\n	font-family:"Aptos"\,sans-serif\;}\n.MsoChpDefault\n	
+	{mso-style-type:export-only\;\n	font-size:10.0pt\;\n	mso-ligatures:none\;}
+	\n@page WordSection1\n	{size:8.5in 11.0in\;\n	margin:1.0in 1.25in 1.0in 1.
+	25in\;}\ndiv.WordSection1\n	{page:WordSection1\;}\n--></style></head><body
+	 lang=EN-US link=blue vlink=purple style='word-wrap:break-word'><div class
+	=WordSection1><p><span style='font-family:"Aptos"\,sans-serif'>Zhuo Chen i
+	s inviting you to a scheduled Zoom meeting.</span> <o:p></o:p></p><p><span
+	 style='font-family:"Aptos"\,sans-serif'>Join Zoom Meeting</span> <br><spa
+	n style='font-family:"Aptos"\,sans-serif'><a href="https://mit.zoom.us/j/9
+	9715958775">https://mit.zoom.us/j/99715958775</a></span> <o:p></o:p></p><p
+	><span style='font-family:"Aptos"\,sans-serif'>One tap mobile</span> <br><
+	span style='font-family:"Aptos"\,sans-serif'>+16465588656\,\,99715958775# 
+	US (New York)</span> <br><span style='font-family:"Aptos"\,sans-serif'>+16
+	699006833\,\,99715958775# US (San Jose)</span> <o:p></o:p></p><p><span sty
+	le='font-family:"Aptos"\,sans-serif'>Meeting ID: 997 1595 8775</span> <o:p
+	></o:p></p><p><span style='font-family:"Aptos"\,sans-serif'>US : +1 646 55
+	8 8656 or +1 669 900 6833</span> <o:p></o:p></p><p><span style='font-famil
+	y:"Aptos"\,sans-serif'>International Numbers: <a href="https://mit.zoom.us
+	/u/auuoeQIVI">https://mit.zoom.us/u/auuoeQIVI</a></span> <o:p></o:p></p><p
+	><span style='font-family:"Aptos"\,sans-serif'>Join by SIP</span> <br><spa
+	n style='font-family:"Aptos"\,sans-serif'><a href="mailto:99715958775@zoom
+	crc.com">99715958775@zoomcrc.com</a></span> <o:p></o:p></p><p><span style=
+	'font-family:"Aptos"\,sans-serif'>Join by Skype for Business</span> <br><s
+	pan style='font-family:"Aptos"\,sans-serif'><a href="https://mit.zoom.us/s
+	kype/99715958775">https://mit.zoom.us/skype/99715958775</a></span> <o:p></
+	o:p></p></div></body></html>
+X-MICROSOFT-CDO-BUSYSTATUS:BUSY
+X-MICROSOFT-CDO-IMPORTANCE:1
+X-MICROSOFT-DISALLOW-COUNTER:FALSE
+X-MS-OLK-APPTLASTSEQUENCE:1
+X-MS-OLK-APPTSEQTIME:20251122T054653Z
+X-MS-OLK-AUTOFILLLOCATION:FALSE
+X-MS-OLK-CONFTYPE:0
+BEGIN:VALARM
+TRIGGER:-PT15M
+ACTION:DISPLAY
+DESCRIPTION:Reminder
+END:VALARM
+END:VEVENT
+END:VCALENDAR

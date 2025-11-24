@@ -1,0 +1,713 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Wedding Invitation</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  
+  <!-- NEW: Import ical.js library for robust parsing -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ical.js/1.5.0/ical.min.js"></script>
+
+  <style>
+    :root {
+      /* UPDATED: A balanced pink-cream background (between #fff7f0 and #ffe6ea) */
+      --page-bg: #fff0f3;
+      
+      /* 
+         Fallback unit (JavaScript will calculate the exact value immediately)
+      */
+      --unit: 10px;
+      
+      --card-width: calc(7 * var(--unit));   /* The folded width (center panel) */
+      --card-height: calc(8.5 * var(--unit));
+      
+      --card-radius: 10px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: var(--page-bg);
+      font-family: sans-serif;
+      overflow: hidden; 
+    }
+
+    /* 
+       1. SMOOTH ROTATION 
+       Added transition property here so the rotation animates smoothly.
+    */
+    .layout-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+      transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1), width 0.6s, height 0.6s;
+      
+      /* NEW: Shift the visual center upwards to avoid bottom cutoff */
+      padding-bottom: 50px; 
+    }
+
+    /* BUTTON GROUP */
+    .button-group {
+      display: flex;
+      /* Gap scales with unit, max 14px */
+      gap: min(14px, calc(0.3 * var(--unit)));
+
+      /* Margin scales with unit, max 22px */
+      margin-bottom: min(22px, calc(0.5 * var(--unit)));
+      
+      z-index: 20;
+    }
+
+    .action-btn {
+      /* Padding scales with unit */
+      padding: min(15px, calc(0.2 * var(--unit))) min(20px, calc(0.5 * var(--unit)));
+      
+      cursor: pointer;
+      background: #c62828;
+      color: white;
+      border: none;
+      border-radius: 30px;
+      
+      /* Unified Font Settings */
+      font-family: "Microsoft YaHei", "SimHei", "Heiti SC", sans-serif; 
+      
+      /* Font size scales with unit, max 15px */
+      font-size: min(15px, calc(0.3 * var(--unit)));
+      
+      font-weight: bold;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      transition: transform 0.2s, background 0.2s;
+      text-align: center;
+      line-height: 1.5; /* Adds space between the two lines */
+      
+      /* Ensure buttons don't get too small to tap */
+      min-width: max(80px, calc(2 * var(--unit)));
+    }
+
+    .action-btn:active {
+      transform: scale(0.95);
+    }
+
+    /* RSVP POPUP STYLES */
+    .rsvp-popup {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.9);
+      background: white;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s, transform 0.3s;
+      min-width: 200px;
+    }
+
+    .rsvp-popup.visible {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translate(-50%, -50%) scale(1);
+    }
+
+    .rsvp-popup .action-btn {
+      background: #444;
+      width: 100%;
+    }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 90;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+
+    .overlay.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .card-scene {
+      width: var(--card-width);
+      height: var(--card-height);
+      perspective: 1500px; 
+    }
+
+    @media (orientation: portrait) {
+      /* 
+         REMOVED: The :root block with complex calc() logic. 
+         JS now handles the unit calculation for portrait mode.
+      */
+
+      .layout-wrapper {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 100vh;
+        height: 100vw;
+        transform: translate(-50%, -50%) rotate(90deg);
+        
+        /* Reset the padding in portrait mode so it stays centered */
+        padding-bottom: 25px; 
+        padding-top: 25px;
+        padding-left: 15px;
+      }
+    }
+
+    .card {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+    }
+
+    /* 
+       2. PANORAMIC INSIDE LOGIC
+       The inside image covers the Center + Left Flap Back + Right Flap Back.
+       Total Width = 200% of the center card width.
+    */
+
+    /* CENTER PANEL (Middle 50% of the image) */
+    .card-inside {
+      position: absolute;
+      inset: 0;
+      background-color: #fff;
+      background-image: url("img/inside.jpg");
+      background-size: 200% 100%; 
+      background-position: center center;
+      border-radius: var(--card-radius);
+      
+      /* FIX: Standard smooth scaling */
+      image-rendering: auto; 
+      
+      /* 
+         UPDATED: Reduce thickness.
+         Changed from -1px to -0.1px. 
+         This is enough to keep it behind the flaps but looks much thinner.
+      */
+      transform: translateZ(-0.5px); 
+      
+      backface-visibility: hidden; 
+      
+      /* DEFAULT: Individual shadow visible */
+      box-shadow: 0 20px 30px rgba(0,0,0,0.2);
+      
+      /* CLOSING: Snap back instantly (0s) so we don't see a gap */
+      transition: box-shadow 0s; 
+      
+      z-index: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #888;
+    }
+
+    /* --- NEW: THE GLOBAL SHADOW (Hidden by default) --- */
+    .card-inside::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      width: 200%; 
+      
+      /* 
+         UPDATED: Match the new thinness.
+         Relative to the center (-0.1px), push back another 0.1px.
+      */
+      transform: translateX(-50%) translateZ(-0.5px); 
+      
+      border-radius: var(--card-radius);
+      box-shadow: 0 20px 50px rgba(0,0,0,0.2); 
+      opacity: 0; /* Hidden when closed */
+      
+      /* CLOSING: Snap off instantly */
+      transition: opacity 0s;
+      
+      pointer-events: none;
+    }
+
+    /* OPEN STATE: Switch shadows */
+    .card.open .card-inside {
+      box-shadow: none; /* Remove individual shadow */
+      
+      /* 
+         OPENING: Fade out the old shadow over 1s.
+         This ensures it doesn't just disappear instantly.
+      */
+      transition: box-shadow 1s; 
+    }
+    
+    .card.open .card-inside::before {
+      opacity: 1; /* Show global shadow */
+      
+      /* 
+         OPENING: Wait 0.8s, then fade in over 0.2s.
+         transition: property duration easing delay;
+      */
+      transition: opacity 0.2s ease 0.8s;
+    }
+
+    .card.open .flap-back {
+      box-shadow: none !important; /* Remove flap shadows */
+      
+      /* OPENING: Fade out old flap shadows over 1s */
+      transition: box-shadow 1s;
+    }
+    /* -------------------------------------------------- */
+
+    /* FLAP CONTAINER */
+    .card-flap {
+      position: absolute;
+      top: 0;
+      height: 100%;
+      width: 50%;
+      transform-style: preserve-3d;
+      transition: transform 1s cubic-bezier(0.25, 1, 0.5, 1);
+      z-index: 1;
+    }
+
+    /* REMOVED: The .card-flap::after pseudo-elements from before */
+    .card-flap::after {
+      display: none;
+    }
+
+    .card-flap.left {
+      left: 0;
+      transform-origin: left center;
+      border-radius: var(--card-radius);
+    }
+
+    .card-flap.right {
+      right: 0;
+      transform-origin: right center;
+      border-radius: var(--card-radius);
+    }
+
+    /* FLAP FACES (Front & Back) */
+    .flap-front, .flap-back {
+      position: absolute;
+      inset: 0;
+      backface-visibility: hidden; 
+      background-size: 100% 100%; 
+      border-radius: var(--card-radius);
+      
+      /* FIX: Standard smooth scaling */
+      image-rendering: auto;
+      
+      /* 
+         UPDATED: Force GPU filtering on flaps too.
+         We move them slightly forward (0.1px) to ensure they sit 
+         on top of the center card (-0.1px) without clipping.
+      */
+      transform: translateZ(0.5px);
+      
+      /* DEFAULT: Individual shadows */
+      box-shadow: 0 20px 30px rgba(0,0,0,0.2);
+      
+      /* CLOSING: Snap back instantly */
+      transition: box-shadow 0s;
+    }
+
+    /* FRONT FACES (The Cover) */
+    .card-flap.left .flap-front {
+      background-image: url("img/left.jpg");
+      background-position: left center;
+      border-radius: var(--card-radius);
+      border-right: 1px solid rgba(0,0,0,0.1);
+    }
+
+    .card-flap.right .flap-front {
+      background-image: url("img/right.jpg");
+      background-position: right center;
+      border-radius: var(--card-radius);
+      border-left: 1px solid rgba(0,0,0,0.1);
+    }
+
+    /* BACK FACES (The Inside Extensions) */
+    .flap-back {
+      background-image: url("img/inside.jpg");
+      
+      /* 
+         UPDATED: Combine rotation with the Z-fix.
+         We must explicitly include the translateZ here because 
+         this rule overrides the generic .flap-back transform.
+      */
+      transform: rotateY(180deg) translateZ(0.5px); 
+      
+      background-color: #fff;
+    }
+
+    .card-flap.left .flap-back {
+      background-size: 400% 100%;
+      background-position: left center;
+      border-radius: var(--card-radius);
+      /* Shadow handled by generic .flap-back rule now */
+    }
+
+    .card-flap.right .flap-back {
+      background-size: 400% 100%;
+      background-position: right center;
+      border-radius: var(--card-radius);
+      /* Shadow handled by generic .flap-back rule now */
+    }
+
+    /* OPEN STATE */
+    .card.open .card-flap.left {
+      transform: rotateY(-180deg);
+    }
+
+    .card.open .card-flap.right {
+      transform: rotateY(180deg);
+    }
+
+  </style>
+</head>
+<body>
+
+  <div class="layout-wrapper">
+    
+    <div class="button-group">
+      <button class="action-btn" id="toggleCard">
+        打开请柬<br>Open Invitation
+      </button>
+      <button class="action-btn" id="rsvpBtn">
+        回复<br>RSVP
+      </button>
+        <!-- NEW CALENDAR BUTTON -->
+      <button class="action-btn" id="calendarBtn">
+        日历<br>Calendar
+      </button>
+      <button class="action-btn" id="zoomBtn">
+        直播链接<br>Zoom Link
+      </button>
+      <!-- NEW MAP BUTTON -->
+      <button class="action-btn" id="mapBtn">
+        导航<br>Get Directions
+      </button>
+    </div>
+
+    <!-- RSVP Popup -->
+    <div class="overlay" id="overlay"></div>
+    <div class="rsvp-popup" id="rsvpPopup">
+      <button class="action-btn" id="sendEmailBtn">
+        发送邮件<br>Send Email
+      </button>
+      <button class="action-btn" id="copyEmailBtn">
+        复制邮箱<br>Copy Email
+      </button>
+      <button class="action-btn" id="closeRsvpBtn" style="background: #888;">
+        关闭<br>Close
+      </button>
+    </div>
+
+    <!-- NEW CALENDAR POPUP -->
+    <div class="rsvp-popup" id="calendarPopup">
+      <button class="action-btn" id="downloadIcsBtn">
+        下载日历文件<br>Download Calendar File
+      </button>
+      <button class="action-btn" id="googleCalendarBtn">
+        添加到日历<br>Add to Calendar
+      </button>
+      <button class="action-btn" id="closeCalendarBtn" style="background: #888;">
+        关闭<br>Close
+      </button>
+    </div>
+
+    <div class="card-scene">
+      <div class="card" id="weddingCard">
+        
+        <!-- The Inside Content (Center) -->
+        <div class="card-inside">
+        </div>
+
+        <!-- The Left Door -->
+        <div class="card-flap left">
+          <div class="flap-front"></div>
+          <div class="flap-back"></div>
+        </div>
+
+        <!-- The Right Door -->
+        <div class="card-flap right">
+          <div class="flap-front"></div>
+          <div class="flap-back"></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- IMPORT CONFIGURATION FILE -->
+  <script src="config.js"></script>
+
+  <script>
+    const card = document.getElementById("weddingCard");
+    const btn  = document.getElementById("toggleCard");
+    
+    // RSVP Elements
+    const rsvpBtn = document.getElementById("rsvpBtn");
+    const zoomBtn = document.getElementById("zoomBtn");
+    const mapBtn = document.getElementById("mapBtn");
+    // NEW: Calendar Elements
+    const calendarBtn = document.getElementById("calendarBtn");
+    const calendarPopup = document.getElementById("calendarPopup");
+    const closeCalendarBtn = document.getElementById("closeCalendarBtn");
+    const downloadIcsBtn = document.getElementById("downloadIcsBtn");
+    const googleCalendarBtn = document.getElementById("googleCalendarBtn");
+
+    const rsvpPopup = document.getElementById("rsvpPopup");
+    const overlay = document.getElementById("overlay");
+    const closeRsvpBtn = document.getElementById("closeRsvpBtn");
+    const sendEmailBtn = document.getElementById("sendEmailBtn");
+    const copyEmailBtn = document.getElementById("copyEmailBtn");
+
+    // LOAD VARIABLES FROM CONFIG.JS
+    const emailAddress = CONFIG.EMAIL; 
+    const zoomUrl = CONFIG.ZOOM_URL; 
+    const locationAddress = CONFIG.LOCATION;
+    
+    // NEW: Load ICS Filename & Timezone
+    const icsFilename = CONFIG.ICS_FILENAME || "invitation.ics";
+    const defaultTz   = CONFIG.TIMEZONE || "America/New_York";
+
+    // REMOVED: const eventTitle, eventStart, eventEnd, eventDesc... 
+    // We no longer load these from config.js
+
+    // --- NEW: DYNAMIC SIZING LOGIC ---
+    function updateSize() {
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      const isPortrait = h > w;
+
+      // 1. Define Constraints
+      const MAX_CARD_WIDTH_PX = 1200; 
+      const ASPECT_W = 14;           
+      const ASPECT_H = 8.5;          
+      
+      // UPDATED: Increased from 50 to 110.
+      // The buttons + margins take up about 100px. 
+      // Setting this to 60 ensures the card calculation leaves enough room for them.
+      const BUTTON_SPACE = 60; 
+      
+      const SAFE_MARGIN = 0.90; // Use 90% of the REMAINING space
+
+      let unit;
+
+      if (isPortrait) {
+        // Portrait Mode (Rotated 90deg)
+        // The layout's "Height" runs along the screen Width (w).
+        // The layout's "Width" runs along the screen Height (h).
+        
+        // Calculate available vertical space (Screen Width - Buttons)
+        const availableVertical = Math.max(0, w - BUTTON_SPACE);
+        
+        // Check 1: Fit Card Height (8.5) into available vertical space
+        const maxUnitBasedOnHeight = (availableVertical * SAFE_MARGIN) / ASPECT_H;
+        
+        // Check 2: Fit Card Width (14) into screen Height
+        const maxUnitBasedOnWidth = (h * SAFE_MARGIN) / ASPECT_W;
+        
+        unit = Math.min(maxUnitBasedOnHeight, maxUnitBasedOnWidth);
+
+      } else {
+        // Landscape Mode (Normal)
+        // Vertical space available = Screen Height - Buttons
+        
+        const availableVertical = Math.max(0, h - BUTTON_SPACE);
+        
+        // Check 1: Fit Card Height (8.5) into available vertical space
+        const maxUnitBasedOnHeight = (availableVertical * SAFE_MARGIN) / ASPECT_H;
+        
+        // Check 2: Fit Card Width (14) into screen Width
+        const maxUnitBasedOnWidth = (w * SAFE_MARGIN) / ASPECT_W;
+        
+        unit = Math.min(maxUnitBasedOnWidth, maxUnitBasedOnHeight);
+      }
+
+      // 2. Apply Pixel Cap (Don't let it get larger than MAX_CARD_WIDTH_PX)
+      const maxUnitPx = MAX_CARD_WIDTH_PX / ASPECT_W;
+      unit = Math.min(unit, maxUnitPx);
+
+      // 3. Set the variable for CSS to use
+      document.documentElement.style.setProperty('--unit', `${unit}px`);
+    }
+
+    // Update on load and whenever window resizes
+    window.addEventListener('resize', updateSize);
+    updateSize(); 
+    // ---------------------------------
+
+    // Toggle Card Logic
+    function toggle() {
+      const isOpen = card.classList.toggle("open");
+      if (isOpen) {
+        btn.innerHTML = "关闭请柬<br>Close Invitation";
+      } else {
+        btn.innerHTML = "打开请柬<br>Open Invitation";
+      }
+    }
+
+    btn.addEventListener("click", toggle);
+    card.addEventListener("click", toggle);
+
+    // RSVP Logic
+    function toggleRsvp() {
+      rsvpPopup.classList.toggle("visible");
+      overlay.classList.toggle("visible");
+    }
+
+    // NEW: Calendar Popup Logic
+    function toggleCalendar() {
+      calendarPopup.classList.toggle("visible");
+      overlay.classList.toggle("visible");
+    }
+
+    // Close overlays when clicking background
+    overlay.addEventListener("click", () => {
+      rsvpPopup.classList.remove("visible");
+      calendarPopup.classList.remove("visible");
+      overlay.classList.remove("visible");
+    });
+
+    rsvpBtn.addEventListener("click", toggleRsvp);
+    closeRsvpBtn.addEventListener("click", toggleRsvp);
+    
+    // Calendar Event Listeners
+    calendarBtn.addEventListener("click", toggleCalendar);
+    closeCalendarBtn.addEventListener("click", toggleCalendar);
+
+    // --- CALENDAR GENERATION LOGIC ---
+
+    // 1. Download Custom ICS File (Triggers Default App)
+    downloadIcsBtn.addEventListener("click", () => {
+      const link = document.createElement('a');
+      link.href = icsFilename; 
+      link.setAttribute('download', icsFilename);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    });
+
+    // 2. Google Calendar Link (Uses ical.js library)
+    googleCalendarBtn.addEventListener("click", async () => {
+      try {
+        let icsText = CONFIG.ICS_CONTENT;
+        if (!icsText) throw new Error("ICS_CONTENT is missing in config.js");
+
+        // --- ROBUST FIX FOR BROKEN/FOLDED LINES ---
+        // 1. Split into lines handling various newline formats
+        const lines = icsText.split(/\r?\n/);
+        const cleanLines = [];
+
+        for (let i = 0; i < lines.length; i++) {
+          let line = lines[i];
+          
+          // Skip empty lines
+          if (line.trim() === "") continue;
+
+          // Logic: Is this a new property or a continuation?
+          // Standard ICS continuation starts with space or tab.
+          // Broken copy-paste might lose indentation but won't have a ':' separator.
+          const startsWithSpace = /^[ \t]/.test(line);
+          const hasColon = line.indexOf(":") !== -1;
+
+          if (i > 0 && (startsWithSpace || !hasColon)) {
+            // It is a continuation of the previous line
+            let content = line;
+            // If it follows standard folding, remove the first character (space/tab)
+            if (startsWithSpace) {
+              content = line.substring(1);
+            }
+            // Append to the last valid property
+            cleanLines[cleanLines.length - 1] += content;
+          } else {
+            // It is a new property (e.g., SUMMARY:...)
+            cleanLines.push(line);
+          }
+        }
+        
+        const fixedIcsText = cleanLines.join("\r\n");
+        // ------------------------------------------
+
+        // USE THE LIBRARY TO PARSE
+        const jcalData = ICAL.parse(fixedIcsText);
+        const vcalendar = new ICAL.Component(jcalData);
+        const vevent = vcalendar.getFirstSubcomponent('vevent');
+
+        if (!vevent) throw new Error("No event (VEVENT) found inside the ICS file.");
+
+        // Extract properties safely
+        const title = vevent.getFirstPropertyValue('summary') || "Wedding";
+        const desc  = vevent.getFirstPropertyValue('description') || "";
+        const loc   = vevent.getFirstPropertyValue('location') || "";
+        const dtstart = vevent.getFirstPropertyValue('dtstart');
+        const dtend   = vevent.getFirstPropertyValue('dtend');
+
+        if (!dtstart) throw new Error("Start time (DTSTART) is missing.");
+        if (!dtend) throw new Error("End time (DTEND) is missing.");
+
+        // Helper to format ICAL.Time to Google format (YYYYMMDDTHHMMSS)
+        const formatTime = (icalTime) => {
+          return icalTime.toString().replace(/[-:]/g, "");
+        };
+
+        const start = formatTime(dtstart);
+        const end   = formatTime(dtend);
+
+        // Generate Google URL
+        const googleUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${start}/${end}&details=${encodeURIComponent(desc)}&location=${encodeURIComponent(loc)}&ctz=${encodeURIComponent(defaultTz)}`;
+        
+        window.open(googleUrl, "_blank");
+
+      } catch (e) {
+        console.error(e);
+        alert("Error reading calendar file. Please try the 'Download Calendar File' button.\n无法读取日历文件，请尝试“下载日历文件”按钮。");
+      }
+    });
+
+    // Send Email
+    sendEmailBtn.addEventListener("click", () => {
+      window.location.href = `mailto:${emailAddress}?subject=Wedding RSVP`;
+    });
+
+    // Copy Email
+    copyEmailBtn.addEventListener("click", () => {
+      navigator.clipboard.writeText(emailAddress).then(() => {
+        const originalText = copyEmailBtn.innerHTML;
+        copyEmailBtn.innerHTML = "已复制!<br>Copied!";
+        setTimeout(() => {
+          copyEmailBtn.innerHTML = originalText;
+        }, 2000);
+      });
+    });
+
+    // Zoom Button Logic
+    zoomBtn.addEventListener("click", () => {
+      window.open(zoomUrl, "_blank");
+    });
+
+    // NEW: Map Button Logic
+    mapBtn.addEventListener("click", () => {
+      // This URL format works on both desktop (opens Google Maps) and mobile (opens default map app)
+      const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(locationAddress)}`;
+      window.open(mapUrl, "_blank");
+    });
+  </script>
+</body>
+</html>
